@@ -99,23 +99,31 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     }
 
     private fun showNickDialog(user: FirebaseUser) {
+        val uid = user.uid
+        val nick = user.displayName
+        showNickDialog(uid, nick)
+    }
+
+    private fun showNickDialog(uid: String, nick: String?) {
         val editText = EditText(this)
-        editText.setText("${user.displayName}")
+        editText.setText("${nick}")
         AlertDialog.Builder(this)
             .setTitle("Nickname")
             .setMessage("Input Nickname")
             .setView(editText)
             .setPositiveButton("OK") { dialog, which ->
                 FirebaseDatabase.getInstance().getReference("users")
-                    .child(user.uid)
+                    .child(uid)
                     .child("nickname")
                     .setValue(editText.text.toString())
             }
             .show()
     }
-
+    //
     fun setNickname(view: View) {
-
+        FirebaseAuth.getInstance().currentUser?.also {
+            showNickDialog(it.uid, binding.tvNickname.text.toString())
+        }
     }
 
     private fun signU() {
