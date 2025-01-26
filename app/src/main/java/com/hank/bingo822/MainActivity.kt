@@ -2,6 +2,7 @@ package com.hank.bingo822
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
@@ -9,10 +10,12 @@ import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.AuthUI.IdpConfig.EmailBuilder
 import com.firebase.ui.auth.AuthUI.IdpConfig.GoogleBuilder
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.hank.bingo822.databinding.ActivityMainBinding
 import java.util.Arrays
 
 class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
+    private val TAG: String? = MainActivity::class.java.simpleName
     private val requestAuth = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
@@ -25,7 +28,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        // menu, Activity, signUp, signOut;
+        // displayName
 
     }
 
@@ -57,6 +60,22 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
 
     override fun onAuthStateChanged(auth: FirebaseAuth) {
         auth.currentUser?.also {
+            it.displayName?.run {
+                FirebaseDatabase.getInstance().getReference("users")
+                    .child(it.uid)
+                    .child("displayName")
+                    .setValue(it.displayName)
+                    .addOnCompleteListener {
+                        Log.d(
+                            TAG, "bingo-data-displayName- " +
+                                    "${auth.currentUser!!.displayName} "
+                        )
+                    }
+                FirebaseDatabase.getInstance().getReference("users")
+                    .child(it.uid)
+                    .child("nickname")
+                    .setValue("${it.displayName}-Nickname")
+            }
 
         } ?: signU()
 
