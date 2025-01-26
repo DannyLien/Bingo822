@@ -5,12 +5,19 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.AuthUI.IdpConfig.EmailBuilder
 import com.firebase.ui.auth.AuthUI.IdpConfig.GoogleBuilder
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.hank.bingo822.databinding.ActivityMainBinding
 import java.util.Arrays
 
@@ -59,7 +66,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     }
 
     override fun onAuthStateChanged(auth: FirebaseAuth) {
-        auth.currentUser?.also {
+        auth.currentUser?.also { it ->
             it.displayName?.run {
                 FirebaseDatabase.getInstance().getReference("users")
                     .child(it.uid)
@@ -71,13 +78,43 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
                                     "${auth.currentUser!!.displayName} "
                         )
                     }
-                FirebaseDatabase.getInstance().getReference("users")
-                    .child(it.uid)
-                    .child("nickname")
-                    .setValue("${it.displayName}-Nickname")
             }
+            //
+            FirebaseDatabase.getInstance().getReference("users")
+                .child(it.uid)
+                .addValueEventListener(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val member = snapshot.getValue(Member::class.java)
+                        member?.nickname?.let { nick ->
+                            binding.tvNickname.text = nick
+                        } ?: showNickDialog(it)
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                    }
+                })
 
         } ?: signU()
+
+    }
+
+    private fun showNickDialog(user: FirebaseUser) {
+        val editText = EditText(this)
+        editText.setText("${user.displayName}")
+        AlertDialog.Builder(this)
+            .setTitle("Nickname")
+            .setMessage("Input Nickname")
+            .setView(editText)
+            .setPositiveButton("OK") { dialog, which ->
+                FirebaseDatabase.getInstance().getReference("users")
+                    .child(user.uid)
+                    .child("nickname")
+                    .setValue(editText.text.toString())
+            }
+            .show()
+    }
+
+    fun setNickname(view: View) {
 
     }
 
