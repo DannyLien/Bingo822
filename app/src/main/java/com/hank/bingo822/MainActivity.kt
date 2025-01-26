@@ -22,6 +22,7 @@ import com.hank.bingo822.databinding.ActivityMainBinding
 import java.util.Arrays
 
 class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
+    private var member: Member? = null
     private val TAG: String? = MainActivity::class.java.simpleName
     private val requestAuth = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -35,8 +36,21 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        // displayName
+        //
 
+    }
+
+    fun setFab(view: View) {
+        val roomText = EditText(this)
+        roomText.setText("Welcome")
+        AlertDialog.Builder(this)
+            .setTitle("Game Room")
+            .setMessage("Input Room Tital")
+            .setView(roomText).setPositiveButton("OK") { dialog, which ->
+                val room = GameRoom(roomText.text.toString(), member)
+                FirebaseDatabase.getInstance().getReference("room")
+                    .push().setValue(room)
+            }.show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -68,23 +82,18 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     override fun onAuthStateChanged(auth: FirebaseAuth) {
         auth.currentUser?.also { it ->
             it.displayName?.run {
-                FirebaseDatabase.getInstance().getReference("users")
-                    .child(it.uid)
-                    .child("displayName")
-                    .setValue(it.displayName)
-                    .addOnCompleteListener {
+                FirebaseDatabase.getInstance().getReference("users").child(it.uid)
+                    .child("displayName").setValue(it.displayName).addOnCompleteListener {
                         Log.d(
-                            TAG, "bingo-data-displayName- " +
-                                    "${auth.currentUser!!.displayName} "
+                            TAG, "bingo-data-displayName- " + "${auth.currentUser!!.displayName} "
                         )
                     }
             }
             //
-            FirebaseDatabase.getInstance().getReference("users")
-                .child(it.uid)
+            FirebaseDatabase.getInstance().getReference("users").child(it.uid)
                 .addValueEventListener(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-                        val member = snapshot.getValue(Member::class.java)
+                        member = snapshot.getValue(Member::class.java)
                         member?.nickname?.let { nick ->
                             binding.tvNickname.text = nick
                         } ?: showNickDialog(it)
@@ -103,7 +112,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
         val nick = user.displayName
         showNickDialog(uid, nick)
     }
-
+    //
     private fun showNickDialog(uid: String, nick: String?) {
         val editText = EditText(this)
         editText.setText("${nick}")
@@ -116,9 +125,9 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
                     .child(uid)
                     .child("nickname")
                     .setValue(editText.text.toString())
-            }
-            .show()
+            }.show()
     }
+
     //
     fun setNickname(view: View) {
         FirebaseAuth.getInstance().currentUser?.also {
@@ -127,16 +136,12 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     }
 
     private fun signU() {
-        val signIn = AuthUI.getInstance()
-            .createSignInIntentBuilder()
-            .setAvailableProviders(
+        val signIn = AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(
                 Arrays.asList(
                     EmailBuilder().build(),
                     GoogleBuilder().build(),
                 )
-            )
-            .setIsSmartLockEnabled(false)
-            .build()
+            ).setIsSmartLockEnabled(false).build()
         requestAuth.launch(signIn)
     }
 
