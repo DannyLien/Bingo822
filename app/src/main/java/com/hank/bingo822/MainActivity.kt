@@ -1,5 +1,6 @@
 package com.hank.bingo822
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -23,10 +24,12 @@ import com.firebase.ui.auth.AuthUI.IdpConfig.EmailBuilder
 import com.firebase.ui.auth.AuthUI.IdpConfig.GoogleBuilder
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
+import com.google.android.play.core.integrity.IntegrityTokenRequest
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.hank.bingo822.databinding.ActivityMainBinding
@@ -113,7 +116,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
 
 
     class RoomHolder(var view: RoomRowBinding) : ViewHolder(view.root) {
-//        1-RecyclerView
+        //        1-RecyclerView
         var image = view.roomImage
         var title = view.roomTitle
     }
@@ -153,8 +156,21 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
             .setPositiveButton("OK") { dialog, which ->
                 val room = GameRoom(roomText.text.toString(), member)
                 FirebaseDatabase.getInstance().getReference("rooms")
-                    .push().setValue(room)
-            }.show()
+                    .push().setValue(room, object : DatabaseReference.CompletionListener {
+                        override fun onComplete(error: DatabaseError?, ref: DatabaseReference) {
+                            val roomId = ref.key
+                            val bingo = Intent(this@MainActivity, BingoActivity::class.java)
+                                .apply {
+                                    putExtra("ROOM_ID", roomId)
+                                    putExtra("IS_CREATOR", true)
+                                }.also { intent ->
+                                    startActivity(intent)
+                                }
+                        }
+                    })
+            }
+                .setNegativeButton("Cancel", null)
+                .show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
