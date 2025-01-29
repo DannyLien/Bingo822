@@ -3,6 +3,7 @@ package com.hank.bingo822
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -16,6 +17,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.Group
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.AuthUI.IdpConfig.EmailBuilder
 import com.firebase.ui.auth.AuthUI.IdpConfig.GoogleBuilder
@@ -28,6 +30,10 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.hank.bingo822.databinding.ActivityMainBinding
+import com.hank.bingo822.databinding.RoomRowBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.w3c.dom.Text
 import java.util.Arrays
 
@@ -74,6 +80,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
         binding.avatar5.setOnClickListener(this)
         binding.avatar6.setOnClickListener(this)
         //
+
         recy = binding.recycler
         recy.setHasFixedSize(true)
         recy.layoutManager = LinearLayoutManager(this)
@@ -84,7 +91,11 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
                 .build()
         roomAdapter = object : FirebaseRecyclerAdapter<GameRoom, RoomHolder>(options) {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RoomHolder {
-                val view = layoutInflater.inflate(R.layout.room_row, parent, false)
+                val view =
+//                    1-RecyclerrView
+                    RoomRowBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+////                    2-RecyclerrView
+//                    layoutInflater.inflate(R.layout.room_row, parent, false)
                 return RoomHolder(view)
             }
 
@@ -96,14 +107,22 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
         }
 
         recy.adapter = roomAdapter
-//
-    }
 
-    class RoomHolder(view: View) : RecyclerView.ViewHolder(view) {
-        var image = view.findViewById<ImageView>(R.id.room_image)
-        var title = view.findViewById<TextView>(R.id.room_title)
 
     }
+
+
+    class RoomHolder(var view: RoomRowBinding) : ViewHolder(view.root) {
+//        1-RecyclerView
+        var image = view.roomImage
+        var title = view.roomTitle
+    }
+
+//    class RoomHolder(var view: View) : RecyclerView.ViewHolder(view) {
+////         2-RecyclerView
+//        var image = view.findViewById<ImageView>(R.id.room_image)
+//        var title = view.findViewById<TextView>(R.id.room_title)
+//    }
 
     fun setNickname(view: View) {
         FirebaseAuth.getInstance().currentUser?.also {
@@ -249,6 +268,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
 
 
 }
+
 
 
 
