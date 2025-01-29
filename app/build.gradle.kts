@@ -47,6 +47,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth:23.1.0")
     implementation("com.google.firebase:firebase-database:21.0.0")
     implementation ("com.firebaseui:firebase-ui-auth:8.0.2")//7.2.0
+    implementation ("com.firebaseui:firebase-ui-database:8.0.2")//7.2.0
     implementation("com.google.gms:google-services:4.4.2")
     // Coil
     implementation("io.coil-kt:coil:2.7.0")

@@ -6,14 +6,21 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.Group
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.AuthUI.IdpConfig.EmailBuilder
 import com.firebase.ui.auth.AuthUI.IdpConfig.GoogleBuilder
+import com.firebase.ui.database.FirebaseRecyclerAdapter
+import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
@@ -21,10 +28,13 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.hank.bingo822.databinding.ActivityMainBinding
-import kotlinx.coroutines.selects.select
+import org.w3c.dom.Text
 import java.util.Arrays
 
 class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.OnClickListener {
+
+    private lateinit var roomAdapter: FirebaseRecyclerAdapter<GameRoom, RoomHolder>
+    private lateinit var recy: RecyclerView
     private lateinit var groupAvatars: Group
     private lateinit var avatar: ImageView
     private var member: Member? = null
@@ -63,6 +73,35 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
         binding.avatar4.setOnClickListener(this)
         binding.avatar5.setOnClickListener(this)
         binding.avatar6.setOnClickListener(this)
+        //
+        recy = binding.recycler
+        recy.setHasFixedSize(true)
+        recy.layoutManager = LinearLayoutManager(this)
+
+        val query = FirebaseDatabase.getInstance().getReference("rooms").limitToLast(30)
+        val options =
+            FirebaseRecyclerOptions.Builder<GameRoom>().setQuery(query, GameRoom::class.java)
+                .build()
+        roomAdapter = object : FirebaseRecyclerAdapter<GameRoom, RoomHolder>(options) {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RoomHolder {
+                val view = layoutInflater.inflate(R.layout.room_row, parent, false)
+                return RoomHolder(view)
+            }
+
+            override fun onBindViewHolder(holder: RoomHolder, position: Int, model: GameRoom) {
+                holder.image.setImageResource(avatarIds[model.init!!.avatarId])
+                holder.title.setText(model.title)
+            }
+
+        }
+
+        recy.adapter = roomAdapter
+//
+    }
+
+    class RoomHolder(view: View) : RecyclerView.ViewHolder(view) {
+        var image = view.findViewById<ImageView>(R.id.room_image)
+        var title = view.findViewById<TextView>(R.id.room_title)
 
     }
 
@@ -91,9 +130,10 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
         AlertDialog.Builder(this)
             .setTitle("Game Room")
             .setMessage("Input Room Tital")
-            .setView(roomText).setPositiveButton("OK") { dialog, which ->
+            .setView(roomText)
+            .setPositiveButton("OK") { dialog, which ->
                 val room = GameRoom(roomText.text.toString(), member)
-                FirebaseDatabase.getInstance().getReference("room")
+                FirebaseDatabase.getInstance().getReference("rooms")
                     .push().setValue(room)
             }.show()
     }
@@ -115,13 +155,15 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
     }
 
     override fun onStart() {
-        FirebaseAuth.getInstance().addAuthStateListener(this)
         super.onStart()
+        FirebaseAuth.getInstance().addAuthStateListener(this)
+        roomAdapter.startListening()
     }
 
     override fun onStop() {
-        FirebaseAuth.getInstance().removeAuthStateListener(this)
         super.onStop()
+        FirebaseAuth.getInstance().removeAuthStateListener(this)
+        roomAdapter.stopListening()
     }
 
     override fun onAuthStateChanged(auth: FirebaseAuth) {
@@ -151,7 +193,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
                     }
                 })
 
-        } ?: signU()
+        } ?: signUp()
 
     }
 
@@ -177,7 +219,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
             }.show()
     }
 
-    private fun signU() {
+    private fun signUp() {
         val signIn = AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(
             Arrays.asList(
                 EmailBuilder().build(),
@@ -207,6 +249,8 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
 
 
 }
+
+
 
 
 
