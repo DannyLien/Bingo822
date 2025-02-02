@@ -8,17 +8,18 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.Query
 import com.google.firebase.database.snapshot.BooleanNode
 import com.hank.bingo822.databinding.ActivityBingoBinding
+import com.hank.bingo822.databinding.SingleButtonBinding
 
 class BingoActivity : AppCompatActivity() {
     companion object {
         private val TAG: String? = BingoActivity::class.java.simpleName
-
     }
 
     private lateinit var ballAdapter: FirebaseRecyclerAdapter<Boolean, NumberHolder>
@@ -63,17 +64,37 @@ class BingoActivity : AppCompatActivity() {
             .build()
         ballAdapter = object : FirebaseRecyclerAdapter<Boolean, NumberHolder>(options) {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NumberHolder {
-                val view = layoutInflater.inflate(R.layout.single_button, parent, false)
+//                val view = layoutInflater.inflate(
+//                    R.layout.single_button,
+//                    parent,
+//                    false
+//                )
+                val view = SingleButtonBinding.inflate(
+                    LayoutInflater.from(parent.context),
+                    parent,
+                    false
+                )
                 return NumberHolder(view)
             }
 
             override fun onBindViewHolder(holder: NumberHolder, position: Int, model: Boolean) {
-                holder.button.setText(buttons.get(position).number.toString())
-                holder.button.picked = !model
+                holder.viewButton.setText(buttons.get(position).number.toString())
+                holder.viewButton.picked = !model
             }
         }
         recy.adapter = ballAdapter
 
+    }
+
+//    class NumberHolder(view: View) : ViewHolder(view) {
+//        lateinit var viewButton: NumberButton
+//
+//        init {
+//            viewButton = view.findViewById(R.id.viewButton)
+//        }
+//    }
+    class NumberHolder(view: SingleButtonBinding) : RecyclerView.ViewHolder(view.root) {
+        val viewButton = view.viewButton
     }
 
     override fun onStart() {
@@ -88,12 +109,5 @@ class BingoActivity : AppCompatActivity() {
 
 }
 
-class NumberHolder(view: View) : RecyclerView.ViewHolder(view) {
-    lateinit var button: NumberButton
 
-    init {
-        button = itemView.findViewById(R.id.viewButton)
-    }
-
-}
 
