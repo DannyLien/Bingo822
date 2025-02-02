@@ -5,12 +5,13 @@
     android:layout_height="wrap_content">
 
     <view
-        android:id="@+id/button"
+        android:id="@+id/viewButton"
         class="com.hank.bingo822.NumberButton"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="8dp"
         android:background="@drawable/circle_button"
+        android:gravity="center"
         android:text="21"
         android:textSize="40sp"
         app:layout_constraintBottom_toBottomOf="parent"

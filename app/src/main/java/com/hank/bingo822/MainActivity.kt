@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
         binding.avatar6.setOnClickListener(this)
         //
 
-        recy = binding.recycler
+        recy = binding.recyclerView
         recy.setHasFixedSize(true)
         recy.layoutManager = LinearLayoutManager(this)
 
@@ -108,21 +108,18 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
             }
 
         }
-
         recy.adapter = roomAdapter
-
 
     }
 
-
     class RoomHolder(var view: RoomRowBinding) : ViewHolder(view.root) {
-        //        1-RecyclerView
+//        1-RecyclerView
         var image = view.roomImage
         var title = view.roomTitle
     }
 
 //    class RoomHolder(var view: View) : RecyclerView.ViewHolder(view) {
-////         2-RecyclerView
+////          2-RecyclerView
 //        var image = view.findViewById<ImageView>(R.id.room_image)
 //        var title = view.findViewById<TextView>(R.id.room_title)
 //    }
@@ -227,7 +224,6 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
                     override fun onCancelled(error: DatabaseError) {
                     }
                 })
-
         } ?: signUp()
 
     }
@@ -281,7 +277,6 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
             .setValue(selectId)
         groupAvatars.visibility = View.GONE
     }
-
 
 }
 
