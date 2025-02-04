@@ -20,6 +20,13 @@ import com.hank.bingo822.databinding.SingleButtonBinding
 class BingoActivity : AppCompatActivity() {
     companion object {
         private val TAG: String? = BingoActivity::class.java.simpleName
+        val STATUS_INIT = 0
+        val STATUS_CREATED = 1
+        val STATUS_JOINED = 2
+        val STATUS_CREATOR_TURN = 3
+        val STATUS_JOINER_TURN = 4
+        val STATUS_CREATOR_BINGO = 5
+        val STATUS_JOINER_BINGO = 6
     }
 
     private lateinit var ballAdapter: FirebaseRecyclerAdapter<Boolean, NumberHolder>
@@ -31,19 +38,29 @@ class BingoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityBingoBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         roomId = intent.getStringExtra("ROOM_ID")
         isCreator = intent.getBooleanExtra("IS_CREATOR", false)
         Log.d(TAG, "bingo-room-intent-roomId- ${roomId}")
-
-        for (i in (1..25)) {
+        val buttons = mutableListOf<NumberButton>()
+        if (isCreator) {
+            for (i in (1..25)) {
+                FirebaseDatabase.getInstance().getReference("rooms")
+                    .child(roomId!!)
+                    .child("numbers")
+                    .child(i.toString())
+                    .setValue(false)
+            }
             FirebaseDatabase.getInstance().getReference("rooms")
                 .child(roomId!!)
-                .child("numbers")
-                .child(i.toString())
-                .setValue(false)
+                .child("status")
+                .setValue(STATUS_CREATED)
+        } else {
+            FirebaseDatabase.getInstance().getReference("rooms")
+                .child(roomId!!)
+                .child("status")
+                .setValue(STATUS_JOINED)
         }
-        val buttons = mutableListOf<NumberButton>()
+//
         for (i in (0..24)) {
             val button = NumberButton(this)
             button.number = i + 1
@@ -64,15 +81,11 @@ class BingoActivity : AppCompatActivity() {
             .build()
         ballAdapter = object : FirebaseRecyclerAdapter<Boolean, NumberHolder>(options) {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NumberHolder {
-//                val view = layoutInflater.inflate(
-//                    R.layout.single_button,
-//                    parent,
-//                    false
+//                val view =
+//                    layoutInflater.inflate(R.layout.single_button, parent, false
 //                )
                 val view = SingleButtonBinding.inflate(
-                    LayoutInflater.from(parent.context),
-                    parent,
-                    false
+                    LayoutInflater.from(parent.context), parent, false
                 )
                 return NumberHolder(view)
             }
@@ -86,9 +99,8 @@ class BingoActivity : AppCompatActivity() {
 
     }
 
-//    class NumberHolder(view: View) : ViewHolder(view) {
+    //    class NumberHolder(view: View) : ViewHolder(view) {
 //        lateinit var viewButton: NumberButton
-//
 //        init {
 //            viewButton = view.findViewById(R.id.viewButton)
 //        }

@@ -41,7 +41,6 @@ import org.w3c.dom.Text
 import java.util.Arrays
 
 class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.OnClickListener {
-
     private lateinit var roomAdapter: FirebaseRecyclerAdapter<GameRoom, RoomHolder>
     private lateinit var recy: RecyclerView
     private lateinit var groupAvatars: Group
@@ -83,11 +82,10 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
         binding.avatar5.setOnClickListener(this)
         binding.avatar6.setOnClickListener(this)
         //
-
         recy = binding.recyclerView
         recy.setHasFixedSize(true)
         recy.layoutManager = LinearLayoutManager(this)
-
+        //
         val query = FirebaseDatabase.getInstance().getReference("rooms").limitToLast(30)
         val options =
             FirebaseRecyclerOptions.Builder<GameRoom>().setQuery(query, GameRoom::class.java)
@@ -105,21 +103,27 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
             override fun onBindViewHolder(holder: RoomHolder, position: Int, model: GameRoom) {
                 holder.image.setImageResource(avatarIds[model.init!!.avatarId])
                 holder.title.setText(model.title)
+                holder.itemView.setOnClickListener {
+                    Intent(this@MainActivity, BingoActivity::class.java).apply {
+                            putExtra("ROOM_ID", model.id)
+                        }.also {
+                            startActivity(it)
+                        }
+                }
             }
-
         }
         recy.adapter = roomAdapter
 
     }
 
     class RoomHolder(var view: RoomRowBinding) : ViewHolder(view.root) {
-//        1-RecyclerView
+        //        1-RecyclerView
         var image = view.roomImage
         var title = view.roomTitle
     }
-
+//
 //    class RoomHolder(var view: View) : RecyclerView.ViewHolder(view) {
-////          2-RecyclerView
+//        //        2-RecyclerView
 //        var image = view.findViewById<ImageView>(R.id.room_image)
 //        var title = view.findViewById<TextView>(R.id.room_title)
 //    }
@@ -131,33 +135,26 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
     }
 
     fun setAvatar(view: View) {
-        groupAvatars.visibility =
-            if (groupAvatars.visibility == View.GONE) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
-    }
-
-    fun setGroupAvatars(view: View) {
-
+        groupAvatars.visibility = if (groupAvatars.visibility == View.GONE) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
     }
 
     fun setFab(view: View) {
         val roomText = EditText(this)
         roomText.setText("Welcome")
-        AlertDialog.Builder(this)
-            .setTitle("Game Room")
-            .setMessage("Input Room Tital")
-            .setView(roomText)
-            .setPositiveButton("OK") { dialog, which ->
+        AlertDialog.Builder(this).setTitle("Game Room").setMessage("Input Room Tital")
+            .setView(roomText).setPositiveButton("OK") { dialog, which ->
                 val room = GameRoom(roomText.text.toString(), member)
-                FirebaseDatabase.getInstance().getReference("rooms")
-                    .push().setValue(room, object : DatabaseReference.CompletionListener {
+                FirebaseDatabase.getInstance().getReference("rooms").push()
+                    .setValue(room, object : DatabaseReference.CompletionListener {
                         override fun onComplete(error: DatabaseError?, ref: DatabaseReference) {
                             val roomId = ref.key
-                            val bingo = Intent(this@MainActivity, BingoActivity::class.java)
-                                .apply {
+                            FirebaseDatabase.getInstance().getReference("rooms")
+                                .child(roomId.toString()).child("id").setValue(roomId)
+                            Intent(this@MainActivity, BingoActivity::class.java).apply {
                                     putExtra("ROOM_ID", roomId)
                                     putExtra("IS_CREATOR", true)
                                 }.also { intent ->
@@ -165,9 +162,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
                                 }
                         }
                     })
-            }
-                .setNegativeButton("Cancel", null)
-                .show()
+            }.setNegativeButton("Cancel", null).show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -238,14 +233,9 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
     private fun showNickDialog(uid: String, nick: String?) {
         val editText = EditText(this)
         editText.setText("${nick}")
-        AlertDialog.Builder(this)
-            .setTitle("Nickname")
-            .setMessage("Input Nickname")
-            .setView(editText)
-            .setPositiveButton("OK") { dialog, which ->
-                FirebaseDatabase.getInstance().getReference("users")
-                    .child(uid)
-                    .child("nickname")
+        AlertDialog.Builder(this).setTitle("Nickname").setMessage("Input Nickname")
+            .setView(editText).setPositiveButton("OK") { dialog, which ->
+                FirebaseDatabase.getInstance().getReference("users").child(uid).child("nickname")
                     .setValue(editText.text.toString())
             }.show()
     }
@@ -272,8 +262,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
             else -> 0
         }
         FirebaseDatabase.getInstance().getReference("users")
-            .child(FirebaseAuth.getInstance().currentUser!!.uid)
-            .child("avatarId")
+            .child(FirebaseAuth.getInstance().currentUser!!.uid).child("avatarId")
             .setValue(selectId)
         groupAvatars.visibility = View.GONE
     }
