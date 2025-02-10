@@ -11,8 +11,11 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.Query
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.snapshot.BooleanNode
 import com.hank.bingo822.databinding.ActivityBingoBinding
 import com.hank.bingo822.databinding.SingleButtonBinding
@@ -27,6 +30,38 @@ class BingoActivity : AppCompatActivity() {
         val STATUS_JOINER_TURN = 4
         val STATUS_CREATOR_BINGO = 5
         val STATUS_JOINER_BINGO = 6
+    }
+
+    var myTurn: Boolean = false
+        set(value) {
+            field = value
+            binding.tvInfo.setText(if (value) "請選號" else "等對手選號")
+        }
+
+    val statusListener = object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            val status: Long = snapshot.value as Long
+            when (status.toInt()) {
+                STATUS_CREATED -> {
+                    binding.tvInfo.setText("等對手加入")
+                }
+
+                STATUS_JOINED -> {
+                    binding.tvInfo.setText("對手已經加入")
+                    FirebaseDatabase.getInstance().getReference("rooms")
+                        .child(roomId!!)
+                        .child("status")
+                        .setValue(STATUS_CREATOR_TURN)
+                }
+
+                STATUS_CREATOR_TURN -> {
+                    myTurn = isCreator
+                }
+            }
+        }
+
+        override fun onCancelled(error: DatabaseError) {}
+
     }
 
     private lateinit var ballAdapter: FirebaseRecyclerAdapter<Boolean, NumberHolder>
@@ -99,7 +134,7 @@ class BingoActivity : AppCompatActivity() {
 
     }
 
-    //    class NumberHolder(view: View) : ViewHolder(view) {
+    //        class NumberHolder(view: View) : ViewHolder(view) {
 //        lateinit var viewButton: NumberButton
 //        init {
 //            viewButton = view.findViewById(R.id.viewButton)
@@ -110,13 +145,21 @@ class BingoActivity : AppCompatActivity() {
     }
 
     override fun onStart() {
-        ballAdapter.startListening()
         super.onStart()
+        ballAdapter.startListening()
+        FirebaseDatabase.getInstance().getReference("rooms")
+            .child(roomId!!)
+            .child("status")
+            .addValueEventListener(statusListener)
     }
 
     override fun onStop() {
-        ballAdapter.stopListening()
         super.onStop()
+        ballAdapter.stopListening()
+        FirebaseDatabase.getInstance().getReference("rooms")
+            .child(roomId!!)
+            .child("status")
+            .removeEventListener(statusListener)
     }
 
 }
