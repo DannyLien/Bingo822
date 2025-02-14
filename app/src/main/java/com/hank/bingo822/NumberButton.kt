@@ -14,5 +14,25 @@ class NumberButton @JvmOverloads constructor(
     var number: Int = 0
     var picked: Boolean = false
     var pos: Int = 0
-
 }
+
+
+//class NumberButton(context: Context) : AppCompatButton(context) {
+//    constructor(context: Context, attrs: AttributeSet) : this(context)
+//
+//    var number: Int = 0
+//    var picked: Boolean = false
+//    var pos: Int = 0
+//}
+
+
+
+
+
+
+
+
+
+
+
+

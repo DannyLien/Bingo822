@@ -104,7 +104,8 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
                 holder.image.setImageResource(avatarIds[model.init!!.avatarId])
                 holder.title.setText(model.title)
                 holder.itemView.setOnClickListener {
-                    Intent(this@MainActivity, BingoActivity::class.java).apply {
+                    Intent(this@MainActivity, BingoActivity::class.java)
+                        .apply {
                             putExtra("ROOM_ID", model.id)
                         }.also {
                             startActivity(it)
@@ -121,7 +122,6 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
         var image = view.roomImage
         var title = view.roomTitle
     }
-//
 //    class RoomHolder(var view: View) : RecyclerView.ViewHolder(view) {
 //        //        2-RecyclerView
 //        var image = view.findViewById<ImageView>(R.id.room_image)
@@ -154,7 +154,8 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
                             val roomId = ref.key
                             FirebaseDatabase.getInstance().getReference("rooms")
                                 .child(roomId.toString()).child("id").setValue(roomId)
-                            Intent(this@MainActivity, BingoActivity::class.java).apply {
+                            Intent(this@MainActivity, BingoActivity::class.java)
+                                .apply {
                                     putExtra("ROOM_ID", roomId)
                                     putExtra("IS_CREATOR", true)
                                 }.also { intent ->
